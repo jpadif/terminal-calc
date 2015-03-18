@@ -1,5 +1,5 @@
 # terminal-calc
-A simple calculator to be used on the terminal.
+A simple python based calculator to be used on the terminal.
 
 ## Usage
 
