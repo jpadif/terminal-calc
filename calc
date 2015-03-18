@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+# coding: utf-8
+"""
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+__author__ = "Josué Padilla"
+__email__ = "jpadif@gmail.com"
+__copyright__ = "Copyright 2015, Josué Padilla"
+__credits__ = ["bw1024"]
+__license__ = "GNU"
+__version__ = "1.0"
+
+
+import sys, re
+
+def is_number(s):
+	""" Check whether a 
+	string is a number, 
+	retun True if it is, False otherwise	
+	"""
+	try:
+		float(s)
+		return True
+	except ValueError:
+		return False
+
+
+def tokenize(string):
+	""" Separates a string by tokens, 
+	and returns a list with them.
+
+	Valid tokens are: +,-,/,*,(,), and numbers
+	"""
+	# Separate the string by 2 - / * \ ( )
+	p = re.compile(ur'((?:[\d]+\.?[\d]*)|(?:[\+-/\\\*\(\)%]))') 
+	return re.findall(p,string)
+
+
+class Parser:
+	""" A class used to parse tokens and compute 
+	it's result, Recursive descent parser
+	Link text <http://en.wikipedia.org/wiki/Recursive_descent_parser>
+	Based on Link text <http://stackoverflow.com/a/9786085>
+
+	Expr ::= Term ('+' Term | '-' Term)*
+	Term ::= Factor ('*' Factor | '/' Factor)*
+	Factor ::= ['-'] (Number | '(' Expr ')')
+	Number ::= Digit+
+	"""
+	def __init__(self,tokens):
+		self.tokens = tokens
+
+	def parse_expr(self):
+		term = self.parse_term()
+		while True:
+			peek = None if not self.tokens else self.tokens[0]		
+			if peek == '+':
+				self.tokens.pop(0)
+				term = term + self.parse_term()
+			elif peek == '-':
+				self.tokens.pop(0)
+				term = term - self.parse_term()
+			elif peek is None:
+				return term
+			else:
+				sys.exit('Error: Malformed expression ')
+
+	def parse_term(self):
+		factor = self.parse_factor()						
+		while 1:			
+			peek = None if not self.tokens else self.tokens[0]
+			if peek is '*':
+				self.tokens.pop(0)
+				factor = factor * self.parse_factor()
+			elif peek is '/':
+				self.tokens.pop(0)
+				r_op = self.parse_factor()
+				if r_op == 0:
+					sys.exit('Error: Divide by 0')
+				else:
+					factor = factor / r_op
+			else:				
+				return factor
+
+	def parse_factor(self):		
+		negate = -1 if self.tokens[0] == '-' else 1  
+		if self.tokens[0] == '(':
+			expr = []
+			if ')' not in self.tokens:
+				sys.exit("Error: Expecting ')'")
+			for token in self.tokens:
+				if token == ')':
+					break
+				expr.append(token)
+			p = Parser(token)
+			return negate * p.parse_expr()		# Multiplies the result by 1 or -1 to convert it into a negative number
+		elif self.tokens[0] is not None:
+			return negate * float(self.tokens.pop(0))
+		else:			
+			sys.exit('Error: Malformed expression')
+
+def main():	
+	if (len(sys.argv)) == 1:
+		sys.exit('Usage: calc (123(+|-|*|\)123)+')
+	input = ''.join(sys.argv[1:])		# Remove the first argument (This file name)
+	tokens = tokenize(input)
+	parser = Parser(tokens)
+	result = parser.parse_expr()
+	print result
+
+main()
