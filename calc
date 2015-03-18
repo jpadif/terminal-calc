@@ -114,8 +114,8 @@ class Parser:
 def main():	
 	if (len(sys.argv)) == 1:
 		sys.exit('Usage: calc (123(+|-|*|\)123)+')
-	input = ''.join(sys.argv[1:])		# Remove the first argument (This file name)
-	tokens = tokenize(input)
+	input = ''.join(sys.argv[1:])		# Remove the first argument (This file name)	
+	tokens = tokenize(input.strip())
 	parser = Parser(tokens)
 	result = parser.parse_expr()
 	print result
